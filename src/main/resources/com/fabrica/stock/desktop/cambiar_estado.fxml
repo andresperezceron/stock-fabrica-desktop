@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.HBox?>
+
+<?import javafx.scene.layout.VBox?>
+<BorderPane xmlns:fx="http://javafx.com/fxml">
+
+    <padding>
+        <Insets top="20.0"
+                right="20.0"
+                bottom="20.0"
+                left="20.0"/>
+    </padding>
+
+    <top>
+        <HBox alignment="CENTER_LEFT"
+              spacing="20.0">
+
+            <Label fx:id="nombreMaquina"/>
+            <Label fx:id="estadoMaquina"/>
+
+        </HBox>
+    </top>
+
+    <center>
+        <VBox fx:id="contenido"
+              alignment="CENTER"
+              spacing="20.0">
+        </VBox>
+    </center>
+
+    <bottom>
+        <HBox fx:id="acciones"
+              alignment="CENTER"
+              spacing="10.0">
+        </HBox>
+    </bottom>
+
+</BorderPane>
