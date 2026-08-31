@@ -1,5 +1,6 @@
 package com.fabrica.stock.desktop.terminal.ui;
 
+import com.fabrica.stock.desktop.terminal.api.ProductoResponse;
 import com.fabrica.stock.desktop.terminal.api.TerminalApi;
 import com.fabrica.stock.desktop.terminal.api.TerminalResponse;
 import javafx.fxml.FXML;
@@ -40,15 +41,17 @@ public class TerminalController {
         estadoMaquina.setText(response.estadoMaquina());
 
         switch(estadoMaquina.getText()) {
-            case "APTA_PRODUCCION" -> aptaProduccion();
+            case "APTA_PRODUCCION" -> aptaProduccion(response);
             case "FUERA_SERVICIO", "CAMBIO_MOLDE", "MANTENIMIENTO" -> estadosUsuario();
         }
     }
 
-    private void aptaProduccion() {
+    private void aptaProduccion(TerminalResponse response) {
         contenido.getChildren().clear();
         Label titulo = new Label("Producto activo");
-        ListView<String> productos = new ListView<>();
+        ListView<ProductoResponse> productos = new ListView<>();
+
+        productos.getItems().addAll(response.productos().productos());
 
         contenido.getChildren().addAll(
                 titulo,
