@@ -2,6 +2,7 @@ package com.fabrica.stock.desktop.terminal.api;
 
 import com.fabrica.stock.desktop.infrastructure.ApiClient;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 
 import java.io.IOException;
 import java.util.Map;
@@ -13,6 +14,7 @@ public class TerminalApi {
     public TerminalApi(ApiClient apiClient, ObjectMapper objectMapper) {
         this.apiClient = apiClient;
         this.objectMapper = objectMapper;
+        objectMapper.registerModule(new JavaTimeModule());
     }
 
     public TerminalResponse obtener(Long maquinaId) throws IOException, InterruptedException {
@@ -27,14 +29,21 @@ public class TerminalApi {
     }
 
     public void cambiarEstado(Long maquinaId, String estado) throws IOException, InterruptedException {
+        String json = objectMapper.writeValueAsString(Map.of("estado", estado));
+        apiClient.put("http://localhost:8080/api/maquinas/" + maquinaId + "/estado", json);
+    }
+
+    public void asignarProducto(Long maquinaId, Long productoId)
+            throws IOException, InterruptedException {
+
         String json = objectMapper.writeValueAsString(
-                Map.of("estado", estado)
+                new IdProductoRequest(productoId)
         );
 
-        apiClient.put(
+        apiClient.post(
                 "http://localhost:8080/api/maquinas/"
                         + maquinaId
-                        + "/estado",
+                        + "/config",
                 json
         );
     }

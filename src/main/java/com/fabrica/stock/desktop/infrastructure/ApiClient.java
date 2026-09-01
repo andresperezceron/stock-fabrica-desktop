@@ -28,7 +28,8 @@ public class ApiClient {
         return response.body();
     }
 
-    public String post(String url, String json) throws IOException, InterruptedException {
+    public void post(String url, String json)
+            throws IOException, InterruptedException {
 
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create(url))
@@ -42,7 +43,9 @@ public class ApiClient {
                         HttpResponse.BodyHandlers.ofString()
                 );
 
-        return response.body();
+        if(response.statusCode() < 200 || response.statusCode() >= 300) {
+            throw new IOException("Error HTTP " + response.statusCode() + ": " + response.body());
+        }
     }
 
     public String put(String url, String json) throws IOException, InterruptedException {

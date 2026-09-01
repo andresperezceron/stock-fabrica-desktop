@@ -6,6 +6,7 @@ import com.fabrica.stock.desktop.terminal.api.TerminalResponse;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
@@ -24,6 +25,9 @@ public class TerminalController {
     private Label estadoMaquina;
 
     @FXML
+    private Label fechaCambioEstado;
+
+    @FXML
     private VBox contenido;
 
     @FXML
@@ -36,9 +40,17 @@ public class TerminalController {
 
     @FXML
     private void initialize() throws IOException, InterruptedException {
+        cargarTerminal();
+    }
+
+    private void cargarTerminal() throws IOException, InterruptedException {
         TerminalResponse response = terminalApi.obtener(maquinaId);
         nombreMaquina.setText(response.nombreMaquina());
         estadoMaquina.setText(response.estadoMaquina());
+        fechaCambioEstado.setText(response.fechaCambioEstado().toString());
+
+        contenido.getChildren().clear();
+        acciones.getChildren().clear();
 
         switch(estadoMaquina.getText()) {
             case "APTA_PRODUCCION" -> aptaProduccion(response);
@@ -47,16 +59,23 @@ public class TerminalController {
     }
 
     private void aptaProduccion(TerminalResponse response) {
-        contenido.getChildren().clear();
         Label titulo = new Label("Producto activo");
         ListView<ProductoResponse> productos = new ListView<>();
-
         productos.getItems().addAll(response.productos().productos());
+        productos.setMaxWidth(Double.MAX_VALUE);
 
-        contenido.getChildren().addAll(
-                titulo,
-                productos
-        );
+        Button asignarProducto = crearBoton("Probando", "CAMBIO_MOLDE");
+        contenido.getChildren().addAll(titulo, productos, asignarProducto);
+
+        productos.setCellFactory(listView -> new ListCell<>() {
+            @Override
+            protected void updateItem(ProductoResponse producto, boolean empty) {
+                super.updateItem(producto, empty);
+
+                if(empty || producto == null) setText(null);
+                else setText(producto.codigo() + " - " + producto.descripcion());
+            }
+        });
 
         Button cambioDeMolde = crearBoton("Cambio de Molde", "CAMBIO_MOLDE");
         acciones.getChildren().add(cambioDeMolde);
@@ -69,7 +88,6 @@ public class TerminalController {
     }
 
     private void estadosUsuario() {
-        acciones.getChildren().clear();
         String estado = estadoMaquina.getText();
 
         Button aptaProduccion = crearBoton("Apta producción", "APTA_PRODUCCION");
@@ -105,8 +123,10 @@ public class TerminalController {
     private Button crearBoton(String nombreBoton, String estado) {
         Button boton = new Button(nombreBoton);
         boton.setOnAction(e -> {
-            try {terminalApi.cambiarEstado(maquinaId, estado);
-            }catch(IOException | InterruptedException ex) { throw new RuntimeException(ex); }
+            try {
+                terminalApi.cambiarEstado(maquinaId, estado);
+                cargarTerminal();
+            } catch(IOException | InterruptedException ex) { throw new RuntimeException(ex); }
         });
         return boton;
     }
