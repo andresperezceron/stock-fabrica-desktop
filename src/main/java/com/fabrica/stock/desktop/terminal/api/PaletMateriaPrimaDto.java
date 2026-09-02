@@ -1,4 +1,4 @@
-package com.fabrica.stock.desktop.config.api;
+package com.fabrica.stock.desktop.terminal.api;
 
 public record PaletMateriaPrimaDto(
         String matricula,

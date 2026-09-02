@@ -33,18 +33,8 @@ public class TerminalApi {
         apiClient.put("http://localhost:8080/api/maquinas/" + maquinaId + "/estado", json);
     }
 
-    public void asignarProducto(Long maquinaId, Long productoId)
-            throws IOException, InterruptedException {
-
-        String json = objectMapper.writeValueAsString(
-                new IdProductoRequest(productoId)
-        );
-
-        apiClient.post(
-                "http://localhost:8080/api/maquinas/"
-                        + maquinaId
-                        + "/config",
-                json
-        );
+    public void asignarProducto(Long maquinaId, Long productoId) throws IOException, InterruptedException {
+        String json = objectMapper.writeValueAsString(new IdProductoRequest(productoId));
+        apiClient.post("http://localhost:8080/api/maquinas/" + maquinaId + "/config", json);
     }
 }

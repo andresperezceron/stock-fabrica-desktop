@@ -6,5 +6,7 @@ public record TerminalResponse(
         String nombreMaquina,
         String estadoMaquina,
         LocalDateTime fechaCambioEstado,
-        ProductosInyeccionResponse productos
+        ProductosInyeccionResponse productos,
+        PaletsConsumoInyeccionResponse palets,
+        VerConfigProduccionResponse config
 ){}
