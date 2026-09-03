@@ -2,11 +2,14 @@ package com.fabrica.stock.desktop.terminal.ui;
 
 import com.fabrica.stock.desktop.terminal.api.*;
 import javafx.fxml.FXML;
+import javafx.geometry.Pos;
 import javafx.scene.control.*;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 
 import java.io.IOException;
+import java.time.format.DateTimeFormatter;
 
 public class TerminalController {
 
@@ -42,7 +45,8 @@ public class TerminalController {
         TerminalResponse response = terminalApi.obtener(maquinaId);
         nombreMaquina.setText(response.nombreMaquina());
         estadoMaquina.setText(response.estadoMaquina());
-        fechaCambioEstado.setText(response.fechaCambioEstado().toString());
+        fechaCambioEstado.setText(response.fechaCambioEstado()
+                .format(DateTimeFormatter.ofPattern("dd/MM/yyyy - HH:mm")));
 
         contenido.getChildren().clear();
         acciones.getChildren().clear();
@@ -55,17 +59,10 @@ public class TerminalController {
     }
 
     private void enConfiguracion(TerminalResponse response) throws IOException, InterruptedException {
-        Label titulo = new Label("Producto activo");
-        Label nombre = new Label(response.config().productoCodigo() + " " + response.config().productoDesc());
-        Label tituloMateriasPrimas = new Label("Materias primas configuradas");
-        contenido.getChildren().addAll(titulo, nombre, tituloMateriasPrimas);
+        Label tituloAsignadas = new Label("Asignadas");
+        Label tituloDisponibles = new Label("Disponibles");
 
-        for(PaletMateriaPrimaDto materiaPrima : response.config().paletsMateriaPrima()) {
-            Label materia = new Label(materiaPrima.matricula() + " " + materiaPrima.productoDesc());
-            contenido.getChildren().add(materia);
-        }
-
-        Label tituloDisponibles = new Label("Materias primas disponibles");
+        ListView<PaletMateriaPrimaDto> paletsAsignados = listViewAsignados(response);
 
         ListView<PaletConsumoInyeccionDto> palets = new ListView<>();
         palets.getItems().addAll(response.palets().palets());
@@ -74,13 +71,71 @@ public class TerminalController {
             @Override
             protected void updateItem(PaletConsumoInyeccionDto palet, boolean empty) {
                 super.updateItem(palet, empty);
-
                 if(empty || palet == null) setText(null);
-                else setText(palet.matricula() + " - " + palet.descProducto() + " - " + palet.loteMateriaPrima());
+                else setText(palet.matricula() + " - " +
+                        palet.codigoProducto() + "  " +
+                        palet.descProducto() + " - " +
+                        palet.loteMateriaPrima() + " - " + palet.nombreUbicacion());
             }
         });
 
-        contenido.getChildren().addAll(tituloDisponibles, palets);
+        Button asignar = new Button("Asignar ←");
+        Button quitar = new Button("→ Quitar");
+
+        asignar.setDisable(true);
+        quitar.setDisable(true);
+
+        palets.getSelectionModel().selectedItemProperty().addListener(
+                (observable,
+                 anterior,
+                 seleccionado) -> {
+                    asignar.setDisable(seleccionado == null);
+                }
+        );
+
+        paletsAsignados.getSelectionModel().selectedItemProperty().addListener(
+                (observable,
+                 anterior,
+                 seleccionado) -> {
+                    quitar.setDisable(seleccionado == null);
+                }
+        );
+
+        asignar.setOnAction(event -> {
+            PaletConsumoInyeccionDto paletSeleccionado = palets.getSelectionModel().getSelectedItem();
+            try {
+                terminalApi.agregarMateriaPrima(maquinaId, paletSeleccionado.paletId());
+                cargarTerminal();
+            } catch(IOException | InterruptedException e) { throw new RuntimeException(e); }
+        });
+
+        quitar.setOnAction(event -> {
+            PaletMateriaPrimaDto paletSeleccionado = paletsAsignados.getSelectionModel().getSelectedItem();
+            try {
+                terminalApi.quitarMateriaPrima(maquinaId, paletSeleccionado.paletId());
+                cargarTerminal();
+            } catch (IOException | InterruptedException e) { throw new RuntimeException(e); }
+        });
+
+        VBox columnaAsignadas = new VBox(5);
+        columnaAsignadas.setMaxWidth(Double.MAX_VALUE);
+        columnaAsignadas.getChildren().addAll(tituloAsignadas, paletsAsignados);
+
+        VBox columnaBotones = new VBox(10);
+        columnaBotones.setAlignment(Pos.CENTER);
+        columnaBotones.getChildren().addAll(asignar, quitar);
+
+        VBox columnaDisponibles = new VBox(5);
+        columnaDisponibles.setMaxWidth(Double.MAX_VALUE);
+        columnaDisponibles.getChildren().addAll(tituloDisponibles, palets);
+
+        HBox materiasPrimas = new HBox(20);
+        HBox.setHgrow(columnaAsignadas, Priority.ALWAYS);
+        HBox.setHgrow(columnaDisponibles, Priority.ALWAYS);
+
+        materiasPrimas.getChildren().addAll(columnaAsignadas, columnaBotones, columnaDisponibles);
+
+        contenido.getChildren().add(materiasPrimas);
 
         if(estadoMaquina.getText().equals("CONFIGURADA")) {
             Button iniciarProduccion = new Button("Iniciar Producción");
@@ -101,7 +156,8 @@ public class TerminalController {
     }
 
     private void aptaProduccion(TerminalResponse response) {
-        Label titulo = new Label("Producto activo");
+        Label titulo = new Label("Selección de producto a fabricar");
+
         ListView<ProductoResponse> productos = new ListView<>();
         productos.getItems().addAll(response.productos().productos());
         productos.setMaxWidth(Double.MAX_VALUE);
@@ -109,7 +165,6 @@ public class TerminalController {
             @Override
             protected void updateItem(ProductoResponse producto, boolean empty) {
                 super.updateItem(producto, empty);
-
                 if(empty || producto == null) setText(null);
                 else setText(producto.codigo() + " - " + producto.descripcion());
             }
@@ -177,5 +232,25 @@ public class TerminalController {
             }catch(IOException | InterruptedException ex) { throw new RuntimeException(ex); }
         });
         return boton;
+    }
+
+    private ListView<PaletMateriaPrimaDto> listViewAsignados(TerminalResponse response) {
+        ListView<PaletMateriaPrimaDto> paletsAsignados = new ListView<>();
+        paletsAsignados.getItems().addAll(response.config().paletsMateriaPrima());
+        paletsAsignados.getSelectionModel().setSelectionMode(SelectionMode.SINGLE);
+        paletsAsignados.setFocusTraversable(false);
+        paletsAsignados.setCellFactory(lv -> new ListCell<>() {
+            @Override
+            protected void updateItem(PaletMateriaPrimaDto item, boolean empty) {
+                super.updateItem(item, empty);
+                if(empty ||  item == null) setText(null);
+                else setText(item.matricula() + " - " +
+                        item.productoCodigo() + "  " +
+                        item.productoDesc() + " - " +
+                        item.loteContenido());
+            }
+        });
+
+        return paletsAsignados;
     }
 }

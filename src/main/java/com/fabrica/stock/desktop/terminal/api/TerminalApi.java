@@ -37,4 +37,20 @@ public class TerminalApi {
         String json = objectMapper.writeValueAsString(new IdProductoRequest(productoId));
         apiClient.post("http://localhost:8080/api/maquinas/" + maquinaId + "/config", json);
     }
+
+    public void agregarMateriaPrima(Long maquinaId, Long paletId) throws IOException, InterruptedException {
+        String json = objectMapper.writeValueAsString(new IdPaletMateriaPrimaRequest(paletId));
+        apiClient.post("http://localhost:8080/api/maquinas/" + maquinaId + "/config/materias-primas", json);
+    }
+
+    public void quitarMateriaPrima(Long maquinaId, Long paletId) throws IOException, InterruptedException {
+        String json = objectMapper.writeValueAsString(new IdPaletMateriaPrimaRequest(paletId));
+
+        apiClient.delete(
+                "http://localhost:8080/api/maquinas/"
+                        + maquinaId
+                        + "/config/materia-prima",
+                json
+        );
+    }
 }

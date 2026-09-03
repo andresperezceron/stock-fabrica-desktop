@@ -64,4 +64,24 @@ public class ApiClient {
 
         return response.body();
     }
+
+    public void delete(String url, String json) throws IOException, InterruptedException {
+
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(url))
+                .header("Content-Type", "application/json")
+                .method("DELETE", HttpRequest.BodyPublishers.ofString(json))
+                .build();
+
+        HttpResponse<String> response = httpClient.send(
+                request,
+                HttpResponse.BodyHandlers.ofString()
+        );
+
+        if(response.statusCode() < 200 || response.statusCode() >= 300) {
+            throw new IOException(
+                    "Error HTTP " + response.statusCode() + ": " + response.body()
+            );
+        }
+    }
 }
