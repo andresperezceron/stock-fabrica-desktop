@@ -18,13 +18,7 @@ public class TerminalApi {
     }
 
     public TerminalResponse obtener(Long maquinaId) throws IOException, InterruptedException {
-
-        String json = apiClient.get(
-                "http://localhost:8080/api/maquinas/"
-                        + maquinaId
-                        + "/terminal"
-        );
-
+        String json = apiClient.get("http://localhost:8080/api/maquinas/" + maquinaId + "/terminal");
         return objectMapper.readValue(json, TerminalResponse.class);
     }
 
@@ -45,12 +39,6 @@ public class TerminalApi {
 
     public void quitarMateriaPrima(Long maquinaId, Long paletId) throws IOException, InterruptedException {
         String json = objectMapper.writeValueAsString(new IdPaletMateriaPrimaRequest(paletId));
-
-        apiClient.delete(
-                "http://localhost:8080/api/maquinas/"
-                        + maquinaId
-                        + "/config/materia-prima",
-                json
-        );
+        apiClient.delete("http://localhost:8080/api/maquinas/" + maquinaId + "/config/materia-prima", json);
     }
 }

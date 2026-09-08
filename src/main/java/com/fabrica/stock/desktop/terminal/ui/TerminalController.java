@@ -41,6 +41,25 @@ public class TerminalController {
         cargarTerminal();
     }
 
+    private void mostrarEstadosUsuario() {
+        contenido.getChildren().clear();
+        acciones.getChildren().clear();
+
+        new EstadosUsuario(
+                terminalApi,
+                maquinaId,
+                contenido,
+                acciones,
+                this::refrescarTerminal
+        );
+        estadoMaquina.setText("Cambiando estado");
+    }
+
+    private void refrescarTerminal() {
+        try { cargarTerminal();
+        }catch(IOException | InterruptedException e) { throw new RuntimeException(e); }
+    }
+
     private void cargarTerminal() throws IOException, InterruptedException {
         TerminalResponse response = terminalApi.obtener(maquinaId);
         nombreMaquina.setText(response.nombreMaquina());
@@ -52,9 +71,23 @@ public class TerminalController {
         acciones.getChildren().clear();
 
         switch(estadoMaquina.getText()) {
-            case "APTA_PRODUCCION" -> aptaProduccion(response);
-            case "FUERA_SERVICIO", "CAMBIO_MOLDE", "MANTENIMIENTO" -> estadosUsuario();
-            case "EN_CONFIGURACION", "CONFIGURADA" -> enConfiguracion(response);
+            case "APTA_PRODUCCION" -> new AptaProduccion(
+                            terminalApi,
+                            maquinaId,
+                            contenido,
+                            acciones,
+                            response,
+                            this::refrescarTerminal,
+                            this::mostrarEstadosUsuario);
+
+            case "FUERA_SERVICIO", "CAMBIO_MOLDE", "MANTENIMIENTO" -> new EstadosUsuario(
+                    terminalApi,
+                    maquinaId,
+                    contenido,
+                    acciones,
+                    this::refrescarTerminal);
+
+            case "EN_CONFIGURACION", "CONFIGURADA" -> new Configuracion(response, contenido, acciones, this::mostrarEstadosUsuario);
         }
     }
 
@@ -153,74 +186,6 @@ public class TerminalController {
 
         Button fueraServicio = crearBoton("Fuera de Servicio", "FUERA_SERVICIO");
         acciones.getChildren().add(fueraServicio);
-    }
-
-    private void aptaProduccion(TerminalResponse response) {
-        Label titulo = new Label("Selección de producto a fabricar");
-
-        ListView<ProductoResponse> productos = new ListView<>();
-        productos.getItems().addAll(response.productos().productos());
-        productos.setMaxWidth(Double.MAX_VALUE);
-        productos.setCellFactory(listView -> new ListCell<>() {
-            @Override
-            protected void updateItem(ProductoResponse producto, boolean empty) {
-                super.updateItem(producto, empty);
-                if(empty || producto == null) setText(null);
-                else setText(producto.codigo() + " - " + producto.descripcion());
-            }
-        });
-
-        Button asignar = new Button("Asignar producto");
-        asignar.setOnAction(e -> {
-            try {
-                Long productoId = productos.getSelectionModel().getSelectedItem().id();
-                terminalApi.asignarProducto(maquinaId, productoId);
-                cargarTerminal();
-            }catch(IOException | InterruptedException ex) { throw new RuntimeException(ex); }
-        });
-        contenido.getChildren().addAll(titulo, productos, asignar);
-
-        Button cambioDeMolde = crearBoton("Cambio de Molde", "CAMBIO_MOLDE");
-        acciones.getChildren().add(cambioDeMolde);
-
-        Button mantenimiento = crearBoton("Mantenimiento", "MANTENIMIENTO");
-        acciones.getChildren().add(mantenimiento);
-
-        Button fueraServicio = crearBoton("Fuera de Servicio", "FUERA_SERVICIO");
-        acciones.getChildren().add(fueraServicio);
-    }
-
-    private void estadosUsuario() {
-        String estado = estadoMaquina.getText();
-
-        Button aptaProduccion = crearBoton("Apta producción", "APTA_PRODUCCION");
-        acciones.getChildren().add(aptaProduccion);
-
-        switch(estado) {
-            case "FUERA_SERVICIO" -> {
-                Button cambioDeMolde = crearBoton("Cambio de molde", "CAMBIO_MOLDE");
-                acciones.getChildren().add(cambioDeMolde);
-
-                Button mantenimiento = crearBoton("Mantenimiento", "MANTENIMIENTO");
-                acciones.getChildren().add(mantenimiento);
-            }
-
-            case "MANTENIMIENTO" -> {
-                Button cambioDeMolde = crearBoton("Cambio de Molde", "CAMBIO_MOLDE");
-                acciones.getChildren().add(cambioDeMolde);
-
-                Button fueraServicio = crearBoton("Fuera de Servicio", "FUERA_SERVICIO");
-                acciones.getChildren().add(fueraServicio);
-            }
-
-            case "CAMBIO_MOLDE" -> {
-                Button mantenimiento = crearBoton("Mantenimiento",  "MANTENIMIENTO");
-                acciones.getChildren().add(mantenimiento);
-
-                Button fueraServicio = crearBoton("Fuera de Servicio", "FUERA_SERVICIO");
-                acciones.getChildren().add(fueraServicio);
-            }
-        }
     }
 
     private Button crearBoton(String nombreBoton, String estado) {
