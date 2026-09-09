@@ -87,7 +87,8 @@ public class TerminalController {
                     acciones,
                     this::refrescarTerminal);
 
-            case "EN_CONFIGURACION", "CONFIGURADA" -> new Configuracion(response, contenido, acciones, this::mostrarEstadosUsuario);
+            case "EN_CONFIGURACION", "CONFIGURADA" ->
+                    new Configuracion(response, contenido, acciones, this::mostrarEstadosUsuario);
         }
     }
 
