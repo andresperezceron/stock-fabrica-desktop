@@ -1,6 +1,8 @@
 package com.fabrica.stock.desktop.principal.ui;
 
 import com.fabrica.stock.desktop.infrastructure.ApiClient;
+import com.fabrica.stock.desktop.mezcla.api.MezclaApi;
+import com.fabrica.stock.desktop.mezcla.ui.MezclaController;
 import com.fabrica.stock.desktop.terminal.api.TerminalApi;
 import com.fabrica.stock.desktop.terminal.ui.TerminalController;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -28,6 +30,31 @@ public class PrincipalController {
                 new FXMLLoader(
                         getClass().getResource(
                                 "/com/fabrica/stock/desktop/terminal.fxml"
+                        )
+                );
+
+        loader.setController(controller);
+
+        Scene scene = new Scene(loader.load());
+
+        Stage stage = (Stage) ((Node) event.getSource())
+                .getScene()
+                .getWindow();
+
+        stage.setScene(scene);
+    }
+
+    @FXML
+    protected void abrirMezcla(ActionEvent event) throws IOException {
+        ApiClient apiClient = new ApiClient();
+        ObjectMapper objectMapper = new ObjectMapper();
+        MezclaApi api = new MezclaApi(apiClient, objectMapper);
+        MezclaController controller = new MezclaController(api);
+
+        FXMLLoader loader =
+                new FXMLLoader(
+                        getClass().getResource(
+                                "/com/fabrica/stock/desktop/mezcla.fxml"
                         )
                 );
 

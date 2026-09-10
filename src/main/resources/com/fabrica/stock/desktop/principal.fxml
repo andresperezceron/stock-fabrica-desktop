@@ -21,4 +21,7 @@
     <Button text="Configuración de producción"
             onAction="#abrirTerminal"/>
 
+    <Button text="Mezclas"
+            onAction="#abrirMezcla"/>
+
 </VBox>
