@@ -24,6 +24,9 @@ public class MezclaController {
     @FXML
     private BorderPane root;
 
+    private final List<String> lMpAsignadas = new ArrayList<>();
+    private final List<Long> paletIds = new ArrayList<>();
+
     public MezclaController(MezclaApi mezclaApi) {
         this.mezclaApi = mezclaApi;
     }
@@ -58,7 +61,7 @@ public class MezclaController {
 
         Button bCrear = new Button("Crear Mezcla");
         bCrear.setOnAction(event -> {
-            try { crearMezcla();
+            try { creandoMezcla();
             } catch(IOException | InterruptedException e) { throw new RuntimeException(e); }
         });
 
@@ -77,7 +80,7 @@ public class MezclaController {
         root.setBottom(hBox);
     }
 
-    private void crearMezcla() throws IOException, InterruptedException {
+    private void creandoMezcla() throws IOException, InterruptedException {
         Label titulo = new Label("CREANDO NUEVA MEZCLA");
         titulo.setFont(Font.font(24));
         root.setTop(new StackPane(titulo));
@@ -112,7 +115,7 @@ public class MezclaController {
                         productos.getSelectionModel().getSelectedItem().id(),
                         productos.getSelectionModel().getSelectedItem().codigo(),
                         productos.getSelectionModel().getSelectedItem().descripcion());
-            } catch (IOException | InterruptedException e) { throw new RuntimeException(e); }
+            }catch(IOException | InterruptedException e) { throw new RuntimeException(e); }
         });
         bSeleccionProducto.setDisable(true);
 
@@ -132,7 +135,6 @@ public class MezclaController {
     private void seleccionarProducto(Long productoId, String productoCodigo, String productoDesc)
             throws IOException, InterruptedException {
 
-        List<String> lMpAsignadas = new ArrayList<>();
         Label idProductoSeleccionado = new Label("Para: " + productoCodigo + " - " + productoDesc);
         Label tituloAsignadas = new Label("Materias primas agregadas");
         Label tituloDisponibles = new Label("Materias primas disponibles");
@@ -170,22 +172,50 @@ public class MezclaController {
 
         Button bAtras = new Button("Atrás");
         bAtras.setOnAction(event -> {
-            try { crearMezcla();
+            try {
+                creandoMezcla();
+                lMpAsignadas.clear();
+                paletIds.clear();
             }catch(IOException | InterruptedException e) { throw new RuntimeException(e); }
         });
 
         Button bAgregar = new Button("Agregar");
         bAgregar.setOnAction(event -> {
             try {
-                agregarMateriaPrima(lMpAsignadas, palets.getSelectionModel().getSelectedItem(), productoId, productoCodigo, productoDesc);
-            } catch (IOException | InterruptedException e) { throw new RuntimeException(e); }
+                agregarMateriaPrima(
+                        palets.getSelectionModel().getSelectedItem(),
+                        productoId,
+                        productoCodigo,
+                        productoDesc);
+            }catch(IOException | InterruptedException e) { throw new RuntimeException(e); }
+        });
+
+        bAgregar.setDisable(true);
+        palets.getSelectionModel().selectedItemProperty().addListener((
+                observable,
+                anterior,
+                seleccionado
+        ) -> bAgregar.setDisable(seleccionado == null));
+
+        Button bCrear = new Button("Crear");
+        bCrear.setOnAction(event -> {
+            try { crearMezcla(productoId);
+            }catch(IOException | InterruptedException e) { throw new RuntimeException(e); }
         });
 
         HBox hBox = new HBox();
         hBox.setAlignment(Pos.CENTER);
         hBox.setSpacing(10);
-        hBox.getChildren().addAll(bAtras, bAgregar);
+        hBox.getChildren().addAll(bAtras, bAgregar, bCrear);
         root.setBottom(hBox);
+    }
+
+    private void crearMezcla(Long productoId) throws IOException, InterruptedException {
+        if(paletIds.isEmpty()) return;
+        mezclaApi.crearMezcla(productoId, paletIds);
+        lMpAsignadas.clear();
+        paletIds.clear();
+        iniciar();
     }
 
     private void mostrasAgregadas(VBox vBox, List<String> lMpAsignadas) {
@@ -195,12 +225,15 @@ public class MezclaController {
     }
 
     private void agregarMateriaPrima(
-            List<String> mpAsignadas,
             PaletMezclaDto item,
             Long id,
             String codigo,
             String desc) throws IOException, InterruptedException {
-        mpAsignadas.add(item.productoCodigo() + "  - " + item.productoDesc() + " - " + item.loteContenido());
+        lMpAsignadas.add(item.matricula()
+                + "  -  " + item.productoCodigo()
+                + "  -  " + item.productoDesc()
+                + "  -  " + item.loteContenido());
+        paletIds.add(item.paletId());
         seleccionarProducto(id, codigo, desc);
     }
 }

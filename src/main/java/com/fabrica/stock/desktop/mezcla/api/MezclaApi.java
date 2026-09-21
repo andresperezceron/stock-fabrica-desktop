@@ -1,10 +1,12 @@
 package com.fabrica.stock.desktop.mezcla.api;
 
 import com.fabrica.stock.desktop.infrastructure.ApiClient;
+import com.fabrica.stock.desktop.terminal.api.IdPaletMateriaPrimaRequest;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 
 import java.io.IOException;
+import java.util.List;
 
 public class MezclaApi {
     private final ApiClient apiClient;
@@ -29,5 +31,10 @@ public class MezclaApi {
     public PaletsMezclaResponse paletsMezcla() throws IOException, InterruptedException {
         String json = apiClient.get("http://localhost:8080/api/palets/mezcla-inyeccion");
         return objectMapper.readValue(json, PaletsMezclaResponse.class);
+    }
+
+    public void crearMezcla(Long productoId, List<Long> paletIds) throws IOException, InterruptedException {
+        String json = objectMapper.writeValueAsString(new NuevaMezclaRequest(productoId, paletIds));
+        apiClient.post("http://localhost:8080/api/mezclas", json);
     }
 }
