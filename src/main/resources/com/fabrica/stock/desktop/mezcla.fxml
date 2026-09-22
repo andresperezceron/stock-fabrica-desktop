@@ -3,6 +3,9 @@
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.layout.BorderPane?>
 
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.layout.HBox?>
 <BorderPane
         fx:id="root"
         xmlns:fx="http://javafx.com/fxml">
@@ -13,5 +16,17 @@
                 bottom="15"
                 left="30"/>
     </padding>
+
+    <top>
+        <StackPane>
+            <Label fx:id="titulo"
+                   text="MEZCLAS"
+                   style="-fx-font-size: 24px;"/>
+        </StackPane>
+    </top>
+
+    <bottom>
+        <HBox fx:id="zonaBotones" spacing="10" alignment="CENTER"/>
+    </bottom>
 
 </BorderPane>

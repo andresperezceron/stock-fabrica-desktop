@@ -24,6 +24,12 @@ public class MezclaController {
     @FXML
     private BorderPane root;
 
+    @FXML
+    private Label titulo;
+
+    @FXML
+    private HBox zonaBotones;
+
     private final List<String> lMpAsignadas = new ArrayList<>();
     private final List<Long> paletIds = new ArrayList<>();
 
@@ -37,9 +43,10 @@ public class MezclaController {
     }
 
     private void iniciar() throws IOException, InterruptedException {
-        Label titulo = new Label("MEZCLAS");
-        titulo.setFont(Font.font(24));
-        root.setTop(new StackPane(titulo));
+        //Label titulo = new Label("MEZCLAS");
+        //titulo.setFont(Font.font(24));
+        //root.setTop(new StackPane(titulo));
+        titulo.setText("MEZCLAS");
 
         MezclasResponse response = mezclaApi.listar();
 
@@ -66,6 +73,12 @@ public class MezclaController {
         });
 
         Button bVer = new Button("Ver");
+        bVer.setOnAction(event -> {
+            try {
+                verMezcla(mezclas.getSelectionModel().getSelectedItem());
+            } catch (IOException | InterruptedException e) { throw new RuntimeException(e); }
+        });
+
         bVer.setDisable(true);
         mezclas.getSelectionModel().selectedItemProperty().addListener((
                         observable,
@@ -73,11 +86,35 @@ public class MezclaController {
                         seleccionado
                 ) -> bVer.setDisable(seleccionado == null));
 
-        HBox hBox = new HBox();
-        hBox.setAlignment(Pos.CENTER);
-        hBox.setSpacing(10);
-        hBox.getChildren().addAll(bCrear, bVer);
-        root.setBottom(hBox);
+        zonaBotones.getChildren().clear();
+        zonaBotones.getChildren().addAll(bCrear, bVer);
+    }
+
+    private void verMezcla(MezclaDto item) throws IOException, InterruptedException {
+        root.setCenter(null);
+        titulo.setText("VISUALIZANDO MEZCLAS");
+
+        Label lbFechaCreacion = MezclaComp.labelFecha(item.fechaCreacion());
+        Label lbProducto = MezclaComp.labelProducto(item);
+        Label lbComposicion = MezclaComp.labelComposicion();
+
+        VBox vBox = MezclaComp.vBoxBotton();
+        vBox.getChildren().addAll(lbFechaCreacion,  lbProducto, lbComposicion);
+
+        root.setCenter(vBox);
+        bottonVer();
+    }
+
+    private void bottonVer() {
+        Button irInicio = new Button("Atrás");
+        irInicio.setOnAction(event -> {
+            try {
+                iniciar();
+            } catch (IOException | InterruptedException e) { throw new RuntimeException(e); }
+        });
+
+        zonaBotones.getChildren().clear();
+        zonaBotones.getChildren().addAll(irInicio);
     }
 
     private void creandoMezcla() throws IOException, InterruptedException {

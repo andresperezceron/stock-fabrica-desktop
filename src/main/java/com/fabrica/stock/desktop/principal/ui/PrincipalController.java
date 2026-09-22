@@ -27,11 +27,7 @@ public class PrincipalController {
         TerminalController controller = new TerminalController(terminalApi, maquinaId);
 
         FXMLLoader loader =
-                new FXMLLoader(
-                        getClass().getResource(
-                                "/com/fabrica/stock/desktop/terminal.fxml"
-                        )
-                );
+                new FXMLLoader(getClass().getResource("/com/fabrica/stock/desktop/terminal.fxml"));
 
         loader.setController(controller);
 

@@ -39,6 +39,6 @@ public class TerminalApi {
 
     public void quitarMateriaPrima(Long maquinaId, Long paletId) throws IOException, InterruptedException {
         String json = objectMapper.writeValueAsString(new IdPaletMateriaPrimaRequest(paletId));
-        apiClient.delete("http://localhost:8080/api/maquinas/" + maquinaId + "/config/materia-prima", json);
+        apiClient.delete("http://localhost:8080/api/maquinas/" + maquinaId + "/config/materias-primas", json);
     }
 }
